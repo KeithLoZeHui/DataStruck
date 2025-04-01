@@ -55,7 +55,6 @@ public:
     }
 };
 
-// Utility functions
 string toLowerCase(string str) {
     for (char &c : str) c = tolower(c);
     return str;
@@ -78,12 +77,10 @@ bool isValidDate(const string &date) {
     if(date.length() != 10) return false;
     if(date[2] != '/' || date[5] != '/') return false;
     
-    // Extract day, month, year
     string dayStr = date.substr(0,2);
     string monthStr = date.substr(3,2);
     string yearStr = date.substr(6,4);
     
-    // Check if all parts are numbers
     if(!isValidInteger(dayStr) || !isValidInteger(monthStr) || !isValidInteger(yearStr))
         return false;
         
@@ -91,7 +88,6 @@ bool isValidDate(const string &date) {
     int month = stoi(monthStr);
     int year = stoi(yearStr);
     
-    // Basic date validation
     return (year >= 2000 && year <= 2024) && 
            (month >= 1 && month <= 12) && 
            (day >= 1 && day <= 31);
@@ -136,7 +132,7 @@ int cleanTransactions(Transaction *&transactions, int &size) {
     }
 
     string line;
-    getline(inFile, line);  // Skip original header
+    getline(inFile, line);
     outFile << "Customer|Product,Category,Price,Date,Payment Method" << endl;
 
     TransactionList validTransactions;
