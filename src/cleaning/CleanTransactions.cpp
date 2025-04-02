@@ -118,15 +118,15 @@ bool isValidPaymentMethod(const string &method) {
 }
 
 int cleanTransactions(Transaction *&transactions, int &size) {
-    ifstream inFile("transactions.csv");
+    ifstream inFile("data/transactions.csv");
     if (!inFile.is_open()) {
-        cout << "Error: Cannot open transactions.csv\n";
+        cout << "Error: Cannot open data/transactions.csv\n";
         return 0;
     }
 
-    ofstream outFile("transactionsClean.csv");
+    ofstream outFile("data/transactionsClean.csv");
     if (!outFile.is_open()) {
-        cout << "Error: Cannot create transactionsClean.csv\n";
+        cout << "Error: Cannot create data/transactionsClean.csv\n";
         inFile.close();
         return 0;
     }
@@ -203,7 +203,7 @@ int cleanTransactions(Transaction *&transactions, int &size) {
     inFile.close();
     outFile.close();
 
-    cout << "Cleaned transactions saved to transactionsClean.csv\n";
+    cout << "Cleaned transactions saved to data/transactionsClean.csv\n";
 
     size = validTransactions.getCount();
     validTransactions.toArray(transactions);

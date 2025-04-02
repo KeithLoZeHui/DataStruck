@@ -123,15 +123,16 @@ vector<Review> loadReviews(const string& filename) {
 }
 
 int main() {
-    auto reviews = loadReviews("reviewsClean.csv");
+    vector<Review> reviews = loadReviews("data/reviewsClean.csv");
+    
     if (reviews.empty()) {
-        cout << "Error: No reviews loaded.\n";
+        cout << "No reviews loaded. Exiting...\n";
         return 1;
     }
-
+    
     ReviewAnalyzer analyzer;
     analyzer.analyzeReviews(reviews);
-    analyzer.printResults(20);
-
+    analyzer.printResults(10);
+    
     return 0;
 }

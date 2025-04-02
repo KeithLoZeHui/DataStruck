@@ -79,15 +79,15 @@ string cleanText(string text) {
 }
 
 int cleanReviews(Review *&reviews, int &size) {
-    ifstream inFile("reviews.csv");
+    ifstream inFile("data/reviews.csv");
     if (!inFile.is_open()) {
-        cout << "Error: Cannot open reviews.csv\n";
+        cout << "Error: Cannot open data/reviews.csv\n";
         return 0;
     }
 
-    ofstream outFile("reviewsClean.csv");
+    ofstream outFile("data/reviewsClean.csv");
     if (!outFile.is_open()) {
-        cout << "Error: Cannot create reviewsClean.csv\n";
+        cout << "Error: Cannot create data/reviewsClean.csv\n";
         inFile.close();
         return 0;
     }
@@ -154,7 +154,7 @@ int cleanReviews(Review *&reviews, int &size) {
     inFile.close();
     outFile.close();
 
-    cout << "Cleaned reviews saved to reviewsClean.csv\n";
+    cout << "Cleaned reviews saved to data/reviewsClean.csv\n";
 
     size = validReviews.getCount();
     validReviews.toArray(reviews);
