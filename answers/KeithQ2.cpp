@@ -1,3 +1,4 @@
+#include "../../include/KeithHPP.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -5,67 +6,151 @@
 #include <iomanip>
 #include <cstring>  // For strcpy
 
-// Custom string array for splitting
-class StringArray {
-    private:
-        char** data;
-        int size_;
+using namespace std;
 
-    public:
-        StringArray() : data(nullptr), size_(0) {}
+// StringList implementation
+StringList::StringList() : head(nullptr), tail(nullptr), size(0) {}
+
+StringList::~StringList() {
+    while (head) {
+        StringNode* temp = head;
+        head = head->next;
+        delete temp;
+    }
+}
+
+void StringList::add(const string& str) {
+    StringNode* newNode = new StringNode(str);
+    if (!head) {
+        head = tail = newNode;
+    } else {
+        tail->next = newNode;
+        tail = newNode;
+    }
+    size++;
+}
+
+StringNode* StringList::getHead() const { return head; }
+int StringList::getSize() const { return size; }
+
+// TransactionList implementation
+TransactionList::TransactionList() : head(nullptr), tail(nullptr), size(0) {}
+
+TransactionList::~TransactionList() {
+    while (head) {
+        TransactionNode* temp = head;
+        head = head->next;
+        delete temp;
+    }
+}
+
+void TransactionList::add(const string& category, const string& paymentMethod) {
+    TransactionNode* newNode = new TransactionNode(category, paymentMethod);
+    if (!head) {
+        head = tail = newNode;
+    } else {
+        tail->next = newNode;
+        tail = newNode;
+    }
+    size++;
+}
+
+TransactionNode* TransactionList::getHead() const { return head; }
+int TransactionList::getSize() const { return size; }
+
+void TransactionList::printTransactions() const {
+    TransactionNode* current = head;
+    while (current) {
+        cout << current->category << " | " << current->paymentMethod << endl;
+        current = current->next;
+    }
+}
+
+void TransactionList::analyzePaymentMethods() const {
+    // Create a linked list to store unique payment methods
+    StringList paymentMethods;
+    int* counts = new int[100](); // Assuming max 100 unique payment methods
+
+    // Count occurrences of each payment method
+    TransactionNode* current = head;
+    while (current) {
+        // Check if payment method already exists
+        bool found = false;
+        StringNode* pmNode = paymentMethods.getHead();
+        int index = 0;
         
-        ~StringArray() {
-            for (int i = 0; i < size_; i++) {
-                delete[] data[i];
+        while (pmNode) {
+            if (pmNode->data == current->paymentMethod) {
+                counts[index]++;
+                found = true;
+                break;
             }
-            delete[] data;
+            pmNode = pmNode->next;
+            index++;
         }
+        
+        if (!found) {
+            paymentMethods.add(current->paymentMethod);
+            counts[paymentMethods.getSize() - 1] = 1;
+        }
+        
+        current = current->next;
+    }
 
-        void add(const std::string& str) {
-            char** newData = new char*[size_ + 1];
-            for (int i = 0; i < size_; i++) {
-                newData[i] = data[i];
-            }
-            newData[size_] = new char[str.length() + 1];
-            strcpy(newData[size_], str.c_str());
-            delete[] data;
-            data = newData;
-            size_++;
-        }
+    // Print analysis
+    StringNode* pmNode = paymentMethods.getHead();
+    int index = 0;
+    while (pmNode) {
+        cout << pmNode->data << ": " << counts[index] << " transactions" << endl;
+        pmNode = pmNode->next;
+        index++;
+    }
 
-        std::string get(int index) const {
-            return std::string(data[index]);
-        }
-
-        int size() const {
-            return size_;
-        }
-};
+    delete[] counts;
+}
 
 // Function to split string by delimiter
-StringArray split(const std::string& str, char delim) {
-    StringArray tokens;
-    std::string token;
-    std::istringstream tokenStream(str);
-    while (std::getline(tokenStream, token, delim)) {
-        tokens.add(token);
+StringList* split(const string& str, char delim) {
+    StringList* result = new StringList();
+    stringstream ss(str);
+    string token;
+    
+    while (getline(ss, token, delim)) {
+        if (!token.empty()) {
+            result->add(token);
+        }
     }
-    return tokens;
+    
+    return result;
 }
 
 // Function to parse a transaction line
-bool parseTransaction(const std::string& line, std::string& category, std::string& paymentMethod) {
-    // First split by comma
-    StringArray fields = split(line, ',');
-    if (fields.size() >= 5) {
-        // Handle Customer|Product field
-        StringArray custProd = split(fields.get(0), '|');
-        if (custProd.size() >= 2) {
-            category = fields.get(1);
-            paymentMethod = fields.get(4);
-            return true;
+bool parseTransaction(const string& line, string& category, string& paymentMethod) {
+    StringList* fields = split(line, ',');
+    StringNode* current = fields->getHead();
+    
+    if (fields->getSize() >= 5 && current) {
+        StringList* custProd = split(current->data, '|');
+        StringNode* prodNode = custProd->getHead();
+        
+        if (custProd->getSize() >= 2 && prodNode && prodNode->next) {
+            category = prodNode->next->data;
+            
+            // Move to payment method field (4th field)
+            for (int i = 0; i < 4 && current; i++) {
+                current = current->next;
+            }
+            
+            if (current) {
+                paymentMethod = current->data;
+                delete custProd;
+                delete fields;
+                return true;
+            }
         }
+        delete custProd;
     }
+    delete fields;
     return false;
 }
 

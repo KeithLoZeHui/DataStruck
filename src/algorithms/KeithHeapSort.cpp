@@ -1,9 +1,8 @@
+#include "../../include/KeithHPP.hpp"
 #include <iostream>
-#include <cmath>
 #include <fstream>
 #include <sstream>
-#include <string>
-#include <iomanip> 
+#include <iomanip>
 using namespace std;
 
 struct Node {
@@ -122,7 +121,7 @@ public:
             return;
         }
 
-        // Find the position for the new node using integer division
+        // Find position for new node using integer division
         int lastPos = size - 1;
         Node* current = root;
         int height = 0;
@@ -132,14 +131,20 @@ public:
             height++;
         }
 
-        for (int i = 0; i < height; i++) {
-            if ((lastPos & (1 << (height - 1 - i))) != 0)
+        // Navigate to parent of new node
+        for (int i = 0; i < height && current; i++) {
+            int bitPosition = height - 1 - i;
+            bool goRight = (lastPos >> bitPosition) & 1;
+            
+            if (goRight && current->right)
                 current = current->right;
-            else
+            else if (!goRight && current->left)
                 current = current->left;
+            else
+                break;
         }
 
-        // Add the new node
+        // Add new node
         if (!current->left)
             current->left = newNode;
         else
@@ -148,7 +153,6 @@ public:
         newNode->parent = current;
         last = newNode;
 
-        // Maintain heap property
         heapifyUp(newNode);
     }
 
@@ -174,12 +178,11 @@ public:
         else
             last->parent->left = nullptr;
 
-        // Update last pointer
+        // Update last pointer using integer division
         if (size > 2) {
             int newLastPos = size - 2;
             Node* current = root;
             
-            // Calculate height using integer division
             int height = 0;
             int temp = newLastPos;
             while (temp > 0) {
@@ -187,11 +190,17 @@ public:
                 height++;
             }
 
-            for (int i = 0; i < height; i++) {
-                if ((newLastPos & (1 << (height - 1 - i))) != 0)
+            // Navigate to new last node
+            for (int i = 0; i < height && current; i++) {
+                int bitPosition = height - 1 - i;
+                bool goRight = (newLastPos >> bitPosition) & 1;
+                
+                if (goRight && current->right)
                     current = current->right;
-                else
+                else if (!goRight && current->left)
                     current = current->left;
+                else
+                    break;
             }
             last = current;
         } else {

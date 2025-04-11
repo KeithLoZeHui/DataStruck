@@ -1,9 +1,8 @@
+#include "../../include/KeithHPP.hpp"
 #include <iostream>
 #include <fstream>
-#include <string>
-#include <sstream>
-#include <algorithm>
-#include <cstring>
+#include <iomanip>
+using namespace std;
 
 // Node structures
 struct StringNode {
