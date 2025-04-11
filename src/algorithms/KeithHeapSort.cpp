@@ -1,8 +1,3 @@
-// Data Structures and Algorithms Assignment
-// Author      : Keith Lo Ze Hui
-// Student ID  : TP067653
-// Description : Implementation of Heap Sort algorithm
-
 #include <iostream>
 #include <cmath>
 #include <fstream>
@@ -14,170 +9,307 @@ using namespace std;
 struct Node {
     double data;
     Node* next;
-    Node(double value) : data(value), next(nullptr) {}
+    Node* left;
+    Node* right;
+    Node* parent;
+    Node(double value) : data(value), next(nullptr), left(nullptr), right(nullptr), parent(nullptr) {}
+};
+
+class LinkedList {
+private:
+    Node* head;
+    int size;
+
+public:
+    LinkedList() : head(nullptr), size(0) {}
+    
+    ~LinkedList() {
+        Node* current = head;
+        while (current != nullptr) {
+            Node* next = current->next;
+            delete current;
+            current = next;
+        }
+    }
+    
+    void append(double value) {
+        Node* newNode = new Node(value);
+        if (!head) {
+            head = newNode;
+        } else {
+            Node* current = head;
+            while (current->next) {
+                current = current->next;
+            }
+            current->next = newNode;
+        }
+        size++;
+    }
+    
+    Node* getHead() const { return head; }
+    int getSize() const { return size; }
+};
+
+class HeapLinkedList {
+private:
+    Node* root;
+    Node* last;
+    int size;
+
+    // Helper function to get parent index
+    Node* getParent(Node* node) {
+        return node->parent;
+    }
+
+    // Helper function to get last node's parent
+    Node* getLastParent() {
+        if (!last) return nullptr;
+        return last->parent;
+    }
+
+    // Helper function to swap node values
+    void swapValues(Node* a, Node* b) {
+        double temp = a->data;
+        a->data = b->data;
+        b->data = temp;
+    }
+
+    // Heapify function for linked list based heap
+    void heapifyUp(Node* node) {
+        while (node && node->parent && node->data > node->parent->data) {
+            swapValues(node, node->parent);
+            node = node->parent;
+        }
+    }
+
+    void heapifyDown(Node* node) {
+        while (true) {
+            Node* largest = node;
+            Node* left = node->left;
+            Node* right = node->right;
+
+            if (left && left->data > largest->data)
+                largest = left;
+            if (right && right->data > largest->data)
+                largest = right;
+
+            if (largest != node) {
+                swapValues(node, largest);
+                node = largest;
+            } else {
+                break;
+            }
+        }
+    }
+
+public:
+    HeapLinkedList() : root(nullptr), last(nullptr), size(0) {}
+
+    ~HeapLinkedList() {
+        while (root) {
+            Node* temp = root;
+            root = root->next;
+            delete temp;
+        }
+    }
+
+    void insert(double value) {
+        Node* newNode = new Node(value);
+        size++;
+
+        if (!root) {
+            root = last = newNode;
+            return;
+        }
+
+        // Find the position for the new node using integer division
+        int lastPos = size - 1;
+        Node* current = root;
+        int height = 0;
+        int temp = lastPos;
+        while (temp > 0) {
+            temp /= 2;
+            height++;
+        }
+
+        for (int i = 0; i < height; i++) {
+            if ((lastPos & (1 << (height - 1 - i))) != 0)
+                current = current->right;
+            else
+                current = current->left;
+        }
+
+        // Add the new node
+        if (!current->left)
+            current->left = newNode;
+        else
+            current->right = newNode;
+
+        newNode->parent = current;
+        last = newNode;
+
+        // Maintain heap property
+        heapifyUp(newNode);
+    }
+
+    double extractMax() {
+        if (!root) throw runtime_error("Heap is empty");
+
+        double maxVal = root->data;
+        
+        if (size == 1) {
+            delete root;
+            root = last = nullptr;
+            size = 0;
+            return maxVal;
+        }
+
+        // Replace root with last node
+        root->data = last->data;
+
+        // Remove last node
+        Node* oldLast = last;
+        if (last->parent->right == last)
+            last->parent->right = nullptr;
+        else
+            last->parent->left = nullptr;
+
+        // Update last pointer
+        if (size > 2) {
+            int newLastPos = size - 2;
+            Node* current = root;
+            
+            // Calculate height using integer division
+            int height = 0;
+            int temp = newLastPos;
+            while (temp > 0) {
+                temp /= 2;
+                height++;
+            }
+
+            for (int i = 0; i < height; i++) {
+                if ((newLastPos & (1 << (height - 1 - i))) != 0)
+                    current = current->right;
+                else
+                    current = current->left;
+            }
+            last = current;
+        } else {
+            last = root;
+        }
+
+        delete oldLast;
+        size--;
+
+        // Maintain heap property
+        heapifyDown(root);
+
+        return maxVal;
+    }
+
+    Node* getRoot() const { return root; }
+    int getSize() const { return size; }
+    bool isEmpty() const { return size == 0; }
 };
 
 class KeithHeapSort {
 private:
-    // Heapify function - maintains heap property
-    void heapify(double arr[], int n, int i) {
-        int largest = i;
-        int left = 2 * i + 1;
-        int right = 2 * i + 2;
+    HeapLinkedList heap;
 
-        if (left < n && arr[left] > arr[largest])
-            largest = left;
-
-        if (right < n && arr[right] > arr[largest])
-            largest = right;
-
-        if (largest != i) {
-            swap(arr[i], arr[largest]);
-            heapify(arr, n, largest);
+public:
+    // Sort using heap-based priority queue
+    LinkedList* sort(LinkedList* list) {
+        // Insert all elements into heap
+        Node* current = list->getHead();
+        while (current) {
+            heap.insert(current->data);
+            current = current->next;
         }
+
+        // Extract elements in sorted order (descending)
+        LinkedList* sortedList = new LinkedList();
+        while (!heap.isEmpty()) {
+            sortedList->append(heap.extractMax());
+        }
+
+        return sortedList;
     }
 
-    // Read CSV file and create linked list
-    Node* readCSV(const string& filename, int columnIndex) {
-        Node* head = nullptr;
+    LinkedList* readCSV(const string& filename, int columnIndex) {
+        LinkedList* list = new LinkedList();
         ifstream file(filename);
         
         if (!file.is_open()) {
             cerr << "Error: Could not open file '" << filename << "'" << endl;
-            return head;
+            return list;
         }
         
         string line;
-        getline(file, line);
+        getline(file, line); // Skip header
         
         while (getline(file, line)) {
-            size_t pipePos = line.find('|');
-            if (pipePos == string::npos) continue;
-            
-            string productInfo = line.substr(pipePos + 1);
-            stringstream ss(productInfo);
+            stringstream ss(line);
             string value;
             int currentColumn = 0;
             
             while (getline(ss, value, ',')) {
                 if (currentColumn == columnIndex) {
                     try {
-                        double amount = stod(value);
-                        Node* newNode = new Node(amount);
-                        if (head == nullptr) {
-                            head = newNode;
-                        } else {
-                            Node* temp = head;
-                            while (temp->next != nullptr) {
-                                temp = temp->next;
-                            }
-                            temp->next = newNode;
-                        }
+                        double number = stod(value);
+                        list->append(number);
                     } catch (...) {
-                        cerr << "Warning: Could not convert value '" << value << "' to number" << endl;
+                        cerr << "Error: Could not convert '" << value << "' to number" << endl;
                     }
+                    break;
                 }
                 currentColumn++;
             }
         }
         
-        if (head == nullptr) {
-            cerr << "Warning: No valid numeric values found in column " << columnIndex << endl;
-        } else {
-            cout << "Successfully read values from the file." << endl;
+        return list;
+    }
+
+    void printList(LinkedList* list, const string& message = "") {
+        if (!message.empty()) {
+            cout << message << endl;
         }
         
-        return head;
-    }
-
-public:
-    // Heap sort function
-    void heapSort(double arr[], int n) {
-        for (int i = n / 2 - 1; i >= 0; i--)
-            heapify(arr, n, i);
-
-        for (int i = n - 1; i > 0; i--) {
-            swap(arr[0], arr[i]);
-            heapify(arr, i, 0);
+        Node* current = list->getHead();
+        while (current) {
+            cout << fixed << setprecision(2) << current->data;
+            if (current->next) cout << " -> ";
+            current = current->next;
         }
+        cout << endl;
     }
 
-    // Print array function
-    void printArray(double arr[], int n, int limit = 10) {
-        cout << "[ ";
-        for (int i = 0; i < min(n, limit); i++) {
-            cout << arr[i];
-            if (i < min(n - 1, limit - 1))
-                cout << ", ";
-        }
-        if (n > limit)
-            cout << "... +" << n - limit << " more";
-        cout << " ]" << endl;
-    }
-
-    // Print linked list function
-    void printLinkedList(Node* head, int limit = 10) {
-        cout << "[ ";
-        int count = 0;
-        while (head != nullptr && count < limit) {
-            cout << head->data;
-            if (head->next != nullptr && count < limit - 1)
-                cout << ", ";
-            head = head->next;
-            count++;
-        }
-        if (count >= limit)
-            cout << "... +" << (count - limit) << " more";
-        cout << " ]" << endl;
-    }
-
-    // Process transactions from CSV file
     void processTransactions(const string& filename) {
         string fullPath = "c:\\Users\\Keith Lo Ze Hui\\Desktop\\Deg 2 sem 2 assignment\\DataStruck\\data\\" + filename;
         cout << "\nProcessing Transactions Data for Heap Sort..." << endl;
         cout << "Reading from file: " << fullPath << endl;
         
-        Node* head = readCSV(fullPath, 2);
+        LinkedList* list = readCSV(fullPath, 2);
         
-        if (head == nullptr) {
+        if (list->getSize() == 0) {
             cout << "No data to process. Please check the file path and content." << endl;
             return;
         }
         
         cout << "Original amounts: ";
-        printLinkedList(head);
+        printList(list);
         
-        // Convert linked list to array
-        int n = 0;
-        Node* temp = head;
-        while (temp != nullptr) {
-            n++;
-            temp = temp->next;
-        }
-        double* arr = new double[n];
-        temp = head;
-        for (int i = 0; i < n; i++) {
-            arr[i] = temp->data;
-            temp = temp->next;
-        }
+        LinkedList* sortedList = sort(list);
         
-        heapSort(arr, n);
-        cout << "Sorted amounts: ";
-        printArray(arr, n);
+        cout << "\nSorted amounts: ";
+        printList(sortedList);
             
         cout << "\nStatistics:" << endl;
-        cout << "Number of transactions: " << n << endl;
-        cout << "Minimum amount: $" << fixed << setprecision(2) << arr[0] << endl;
-        cout << "Maximum amount: $" << arr[n - 1] << endl;
+        cout << "Number of transactions: " << sortedList->getSize() << endl;
+        cout << "Minimum amount: $" << sortedList->getHead()->data << endl;
+        cout << "Maximum amount: $" << sortedList->getHead()->data << endl;
         
-        delete[] arr;
-        
-        // Clean up linked list
-        while (head != nullptr) {
-            Node* temp = head;
-            head = head->next;
-            delete temp;
-        }
+        delete list;
+        delete sortedList;
     }
 };
 

@@ -3,8 +3,6 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
-#include <vector> //cannot use vector, create a new .h file
-#include <queue>
 #include <algorithm>
 
 using namespace std;
@@ -14,12 +12,150 @@ struct Review {
     int rating;
 };
 
+// Node structures for linked lists
+struct StringNode {
+    string data;
+    StringNode* next;
+    StringNode(const string& str) : data(str), next(nullptr) {}
+};
+
+struct ReviewNode {
+    Review data;
+    ReviewNode* next;
+    ReviewNode(const Review& rev) : data(rev), next(nullptr) {}
+};
+
+struct WordFreqNode {
+    string word;
+    int frequency;
+    WordFreqNode* next;
+    WordFreqNode(const string& w, int f) : word(w), frequency(f), next(nullptr) {}
+};
+
+// Linked List implementations
+class StringList {
+private:
+    StringNode* head;
+    StringNode* tail;
+    int size;
+
+public:
+    StringList() : head(nullptr), tail(nullptr), size(0) {}
+    
+    ~StringList() {
+        while (head) {
+            StringNode* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+    
+    void add(const string& str) {
+        StringNode* newNode = new StringNode(str);
+        if (!head) {
+            head = tail = newNode;
+        } else {
+            tail->next = newNode;
+            tail = newNode;
+        }
+        size++;
+    }
+    
+    StringNode* getHead() const { return head; }
+    int getSize() const { return size; }
+};
+
+class ReviewList {
+private:
+    ReviewNode* head;
+    ReviewNode* tail;
+    int size;
+
+public:
+    ReviewList() : head(nullptr), tail(nullptr), size(0) {}
+    
+    ~ReviewList() {
+        while (head) {
+            ReviewNode* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+    
+    void add(const Review& review) {
+        ReviewNode* newNode = new ReviewNode(review);
+        if (!head) {
+            head = tail = newNode;
+        } else {
+            tail->next = newNode;
+            tail = newNode;
+        }
+        size++;
+    }
+    
+    ReviewNode* getHead() const { return head; }
+    bool empty() const { return head == nullptr; }
+    int getSize() const { return size; }
+};
+
+class WordFreqList {
+private:
+    WordFreqNode* head;
+    int size;
+
+public:
+    WordFreqList() : head(nullptr), size(0) {}
+    
+    ~WordFreqList() {
+        while (head) {
+            WordFreqNode* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+    
+    void add(const string& word, int freq) {
+        WordFreqNode* newNode = new WordFreqNode(word, freq);
+        
+        // Insert in sorted order (by frequency, descending)
+        if (!head || freq > head->frequency) {
+            newNode->next = head;
+            head = newNode;
+        } else {
+            WordFreqNode* current = head;
+            while (current->next && current->next->frequency >= freq) {
+                current = current->next;
+            }
+            newNode->next = current->next;
+            current->next = newNode;
+        }
+        size++;
+    }
+    
+    WordFreqNode* getHead() const { return head; }
+    int getSize() const { return size; }
+    
+    WordFreqList* getTopN(int n) {
+        WordFreqList* result = new WordFreqList();
+        WordFreqNode* current = head;
+        int count = 0;
+        
+        while (current && count < n) {
+            result->add(current->word, current->frequency);
+            current = current->next;
+            count++;
+        }
+        
+        return result;
+    }
+};
+
 class ReviewAnalyzer {
 private:
-    unordered_map<string, int> wordFrequency;
+    WordFreqList wordFrequency;
 
-    vector<string> tokenizeText(const string& text) {
-        vector<string> tokens;
+    StringList tokenizeText(const string& text) {
+        StringList tokens;
         string word;
         stringstream ss(text);
         
@@ -32,7 +168,7 @@ private:
             }
             
             if (cleanWord.length() > 2) {
-                tokens.push_back(cleanWord);
+                tokens.add(cleanWord);
             }
         }
         return tokens;
@@ -40,55 +176,54 @@ private:
 
     void processReview(const Review& review) {
         if (review.rating == 1) {
-            vector<string> tokens = tokenizeText(review.reviewText);
-            for (const auto& token : tokens) {
-                wordFrequency[token]++;
+            StringList tokens = tokenizeText(review.reviewText);
+            for (StringNode* curr = tokens.getHead(); curr != nullptr; curr = curr->next) {
+                bool found = false;
+                WordFreqNode* current = wordFrequency.getHead();
+                while (current) {
+                    if (current->word == curr->data) {
+                        current->frequency++;
+                        found = true;
+                        break;
+                    }
+                    current = current->next;
+                }
+                if (!found) {
+                    wordFrequency.add(curr->data, 1);
+                }
             }
         }
     }
 
 public:
-    void analyzeReviews(const vector<Review>& reviews) {
-        for (const auto& review : reviews) {
-            processReview(review);
+    void analyzeReviews(const ReviewList& reviews) {
+        for (ReviewNode* curr = reviews.getHead(); curr != nullptr; curr = curr->next) {
+            processReview(curr->data);
         }
     }
 
-    vector<pair<string, int>> getTopWords(int n) {
-        priority_queue<pair<int, string>, 
-                      vector<pair<int, string>>, 
-                      greater<pair<int, string>>> pq;
-
-        for (const auto& pair : wordFrequency) {
-            pq.push({pair.second, pair.first});
-            if (pq.size() > n) {
-                pq.pop();
-            }
-        }
-
-        vector<pair<string, int>> result;
-        while (!pq.empty()) {
-            result.push_back({pq.top().second, pq.top().first});
-            pq.pop();
-        }
-        reverse(result.begin(), result.end());
-        
-        return result;
+    WordFreqList* getTopWords(int n) {
+        return wordFrequency.getTopN(n);
     }
 
     void printResults(int topN = 10) {
         cout << "\nTop " << topN << " most frequent words in 1-star reviews:\n";
         cout << "----------------------------------------\n";
-        auto topWords = getTopWords(topN);
         
-        for (const auto& pair : topWords) {
-            cout << pair.first << ": " << pair.second << " occurrences\n";
+        WordFreqList* topWords = getTopWords(topN);
+        WordFreqNode* current = topWords->getHead();
+        
+        while (current) {
+            cout << current->word << ": " << current->frequency << " occurrences\n";
+            current = current->next;
         }
+        
+        delete topWords;
     }
 };
 
-vector<Review> loadReviews(const string& filename) {
-    vector<Review> reviews;
+ReviewList loadReviews(const string& filename) {
+    ReviewList reviews;
     ifstream file(filename);
     
     if (!file.is_open()) {
@@ -112,7 +247,7 @@ vector<Review> loadReviews(const string& filename) {
         try {
             review.rating = stoi(rating);
             if (review.rating >= 1 && review.rating <= 5) {
-                reviews.push_back(review);
+                reviews.add(review);
             }
         } catch (...) {
             continue;
@@ -123,7 +258,7 @@ vector<Review> loadReviews(const string& filename) {
 }
 
 int main() {
-    vector<Review> reviews = loadReviews("data/reviewsClean.csv");
+    ReviewList reviews = loadReviews("data/reviewsClean.csv");
     
     if (reviews.empty()) {
         cout << "No reviews loaded. Exiting...\n";
