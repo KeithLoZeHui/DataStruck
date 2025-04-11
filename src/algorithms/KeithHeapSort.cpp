@@ -19,6 +19,7 @@ struct Node {
 
 class KeithHeapSort {
 private:
+    // Heapify function - maintains heap property
     void heapify(double arr[], int n, int i) {
         int largest = i;
         int left = 2 * i + 1;
@@ -36,6 +37,7 @@ private:
         }
     }
 
+    // Read CSV file and create linked list
     Node* readCSV(const string& filename, int columnIndex) {
         Node* head = nullptr;
         ifstream file(filename);
@@ -89,6 +91,7 @@ private:
     }
 
 public:
+    // Heap sort function
     void heapSort(double arr[], int n) {
         for (int i = n / 2 - 1; i >= 0; i--)
             heapify(arr, n, i);
@@ -99,6 +102,7 @@ public:
         }
     }
 
+    // Print array function
     void printArray(double arr[], int n, int limit = 10) {
         cout << "[ ";
         for (int i = 0; i < min(n, limit); i++) {
@@ -111,6 +115,7 @@ public:
         cout << " ]" << endl;
     }
 
+    // Print linked list function
     void printLinkedList(Node* head, int limit = 10) {
         cout << "[ ";
         int count = 0;
@@ -126,6 +131,7 @@ public:
         cout << " ]" << endl;
     }
 
+    // Process transactions from CSV file
     void processTransactions(const string& filename) {
         string fullPath = "c:\\Users\\Keith Lo Ze Hui\\Desktop\\Deg 2 sem 2 assignment\\DataStruck\\data\\" + filename;
         cout << "\nProcessing Transactions Data for Heap Sort..." << endl;
@@ -175,6 +181,7 @@ public:
     }
 };
 
+// Main function
 int main() {
     KeithHeapSort sorter;
     sorter.processTransactions("transactionsClean.csv");
