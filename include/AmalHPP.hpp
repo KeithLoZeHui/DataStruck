@@ -36,4 +36,31 @@ class TransactionLinkedListStore{
         ~TransactionLinkedListStore();
 };
 
+struct Review{
+    string productID;
+    string customerID;
+    double rating;
+    string reviewText;
+};
+
+struct ReviewNode{
+    Review data;
+    ReviewNode* next;
+    ReviewNode(Review r);
+};
+
+class ReviewLinkedListStore{
+    private:
+        ReviewNode* head;
+        int size;
+
+    public:
+        ReviewLinkedListStore();
+        void insert(const Review& r);
+        ReviewNode* getHead() const;
+        int getSize() const;
+        void displayReviews();
+        ~ReviewLinkedListStore();
+};
+
 #endif
