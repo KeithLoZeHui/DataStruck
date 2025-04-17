@@ -1,27 +1,43 @@
-#ifndef KEITH_HPP
-#define KEITH_HPP
+#ifndef KEITHHPP_HPP
+#define KEITHHPP_HPP
 
 #include <string>
-#include <utility>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
-//===============================
-// Common Node Structures
-//===============================
-struct StringNode {
-    std::string data;
-    StringNode* next;
-    StringNode(const std::string& str) : data(str), next(nullptr) {}
-};
-
-struct TransactionNode {
-    std::string date;
-    std::string customer;
+// Custom data structures
+struct Transaction {
+    std::string customerID;
+    std::string product;
     double price;
-    TransactionNode* next;
-    TransactionNode(const std::string& d, const std::string& c, double p) 
-        : date(d), customer(c), price(p), next(nullptr) {}
+    std::string date;
+    std::string category;
+    std::string paymentMethod;
+    Transaction* next;
+    
+    Transaction() : next(nullptr) {}
 };
 
+struct Review {
+    std::string productID;
+    std::string customerID;
+    int rating;
+    std::string reviewText;
+    Review* next;
+    
+    Review() : next(nullptr) {}
+};
+
+struct WordFrequency {
+    std::string word;
+    int frequency;
+    WordFrequency* next;
+    
+    WordFrequency() : frequency(0), next(nullptr) {}
+};
+
+// Heap Sort related structures and classes
 struct HeapNode {
     double data;
     HeapNode* next;
@@ -31,86 +47,16 @@ struct HeapNode {
     HeapNode(double value) : data(value), next(nullptr), left(nullptr), right(nullptr), parent(nullptr) {}
 };
 
-//===============================
-// Q1 - Transaction Processing
-//===============================
-class StringList {
-private:
-    StringNode* head;
-    StringNode* tail;
-    int size;
-
-public:
-    StringList();
-    ~StringList();
-    void add(const std::string& str);
-    StringNode* getHead() const;
-    int getSize() const;
-};
-
-class TransactionList {
-private:
-    TransactionNode* head;
-    TransactionNode* tail;
-    int size;
-
-public:
-    TransactionList();
-    ~TransactionList();
-    void add(const std::string& date, const std::string& customer, double price);
-    TransactionNode* getHead() const;
-    int getSize() const;
-    void sortByDate();
-    double calculateCustomerTotal(const std::string& customer);
-    void printTransactions();
-};
-
-//===============================
-// Q2 - Payment Analysis
-//===============================
-class PaymentList {
-private:
-    TransactionNode* head;
-    TransactionNode* tail;
-    int size;
-
-public:
-    PaymentList();
-    ~PaymentList();
-    void add(const std::string& category, const std::string& paymentMethod);
-    TransactionNode* getHead() const;
-    int getSize() const;
-    void analyzePaymentMethods() const;
-    void printTransactions() const;
-};
-
-//===============================
-// Heap Sort Implementation
-//===============================
-class LinkedList {
-private:
-    HeapNode* head;
-    int size;
-
-public:
-    LinkedList();
-    ~LinkedList();
-    void append(double value);
-    HeapNode* getHead() const;
-    int getSize() const;
-};
-
 class HeapLinkedList {
 private:
     HeapNode* root;
     HeapNode* last;
     int size;
-
-    HeapNode* getParent(HeapNode* node);
-    HeapNode* getLastParent();
-    void swapValues(HeapNode* a, HeapNode* b);
     void heapifyUp(HeapNode* node);
     void heapifyDown(HeapNode* node);
+    void swapValues(HeapNode* a, HeapNode* b);
+    HeapNode* getParent(HeapNode* node);
+    HeapNode* getLastParent();
 
 public:
     HeapLinkedList();
@@ -125,39 +71,21 @@ public:
 class KeithHeapSort {
 private:
     HeapLinkedList heap;
-
 public:
-    LinkedList* sort(LinkedList* list);
-    LinkedList* readCSV(const std::string& filename, int columnIndex);
-    void printList(LinkedList* list, const std::string& message = "");
-};
-
-//===============================
-// Common Utility Functions
-//===============================
-StringList* split(const std::string& str, char delim);
-void parseTransaction(const std::string& line, std::string& date, std::string& customer, double& price);
-bool parsePayment(const std::string& line, std::string& category, std::string& paymentMethod);
-
-//===============================
-// Jump Search Implementation
-//===============================
-class KeithJumpSearch {
-public:
-    // Reads a CSV file and returns a linked list of values from a specified column
-    // (Node* readCSV(const std::string& filename, int columnIndex); is private in the original, so we will not expose it unless needed)
-
-    // Sorts an array using insertion sort
-    void insertionSort(double arr[], int n);
-
-    // Performs jump search on a sorted array
-    int jumpSearch(double arr[], int n, double x);
-
-    // Prints an array (with optional limit)
-    void printArray(double arr[], int n, int limit = 10);
-
-    // Processes transactions from a file (main driver for the algorithm)
+    void sortTransactions(Transaction*& head);
     void processTransactions(const std::string& filename);
 };
 
-#endif // KEITH_HPP
+// Function declarations
+void readTransactionsFile(const std::string& filename, Transaction*& head);
+void readReviewsFile(const std::string& filename, Review*& head);
+void mergeSortTransactions(Transaction*& head);
+int countTransactions(Transaction* head);
+int countReviews(Review* head);
+int countWordFrequency(WordFrequency* head);
+double calculateElectronicsCreditCardPercentage(Transaction* head);
+void findOneStarReviewWords(Review* head, WordFrequency*& wordFreq);
+void sortWordsByFrequency(WordFrequency*& head);
+void displayTopWords(WordFrequency* head, int limit);
+
+#endif
