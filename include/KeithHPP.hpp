@@ -139,4 +139,25 @@ StringList* split(const std::string& str, char delim);
 void parseTransaction(const std::string& line, std::string& date, std::string& customer, double& price);
 bool parsePayment(const std::string& line, std::string& category, std::string& paymentMethod);
 
+//===============================
+// Jump Search Implementation
+//===============================
+class KeithJumpSearch {
+public:
+    // Reads a CSV file and returns a linked list of values from a specified column
+    // (Node* readCSV(const std::string& filename, int columnIndex); is private in the original, so we will not expose it unless needed)
+
+    // Sorts an array using insertion sort
+    void insertionSort(double arr[], int n);
+
+    // Performs jump search on a sorted array
+    int jumpSearch(double arr[], int n, double x);
+
+    // Prints an array (with optional limit)
+    void printArray(double arr[], int n, int limit = 10);
+
+    // Processes transactions from a file (main driver for the algorithm)
+    void processTransactions(const std::string& filename);
+};
+
 #endif // KEITH_HPP
