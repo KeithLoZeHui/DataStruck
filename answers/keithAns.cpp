@@ -3,22 +3,19 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
+#include <cctype>
+//break down the sentence into words, put the words into linked list, and find any and all similar words instead of using this StopWord, need to break down the sentences into what expressions (need to detect symbols)
 
-bool isStopWord(const std::string& word) {
-    static const std::string stopWords[] = {
-        "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "he",
-        "in", "is", "it", "its", "of", "on", "that", "the", "to", "was", "were",
-        "will", "with", "the", "this", "but", "they", "have", "had", "what", "when",
-        "where", "who", "which", "why", "how", "all", "any", "both", "each", "few",
-        "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own",
-        "same", "so", "than", "too", "very", "can", "will", "just", "should", "now"
-    };
+// Structure to store word variations and their frequencies
+struct WordNode {
+    std::string baseWord;
+    std::string variation;
+    int frequency;
+    WordNode* next;
     
-    for (const auto& stopWord : stopWords) {
-        if (word == stopWord) return true;
-    }
-    return false;
-}
+    WordNode() : frequency(0), next(nullptr) {}
+};
 
 // Helper function to split string into words
 void splitIntoWords(const std::string& text, WordFrequency*& wordFreq) {
@@ -34,7 +31,7 @@ void splitIntoWords(const std::string& text, WordFrequency*& wordFreq) {
             }
         }
         
-        if (cleanWord.empty() || isStopWord(cleanWord)) continue;
+        if (cleanWord.empty()) continue;
         
         // Update word frequency
         WordFrequency* current = wordFreq;
@@ -218,13 +215,195 @@ double calculateElectronicsCreditCardPercentage(Transaction* head) {
     return totalElectronics > 0 ? (double)electronicsCreditCard / totalElectronics * 100 : 0;
 }
 
-// Find and sort frequent words in 1-star reviews
+// Function to check if a character is a symbol
+bool isSymbol(char c) {
+    return !isalnum(c) && !isspace(c);
+}
+
+// Function to normalize a word (remove symbols, convert to lowercase)
+std::string normalizeWord(const std::string& word) {
+    std::string normalized;
+    for (char c : word) {
+        if (!isSymbol(c)) {
+            normalized += tolower(c);
+        }
+    }
+    return normalized;
+}
+
+// Function to check if two words are similar (using Levenshtein distance)
+bool areWordsSimilar(const std::string& word1, const std::string& word2, int maxDistance = 2) {
+    if (abs((int)word1.length() - (int)word2.length()) > maxDistance) {
+        return false;
+    }
+    
+    int distance = 0;
+    for (size_t i = 0; i < std::min(word1.length(), word2.length()); ++i) {
+        if (word1[i] != word2[i]) {
+            distance++;
+            if (distance > maxDistance) return false;
+        }
+    }
+    return true;
+}
+
+// Function to process text and extract words with symbols
+void processText(const std::string& text, WordNode*& wordList) {
+    std::string currentWord;
+    std::string currentSymbols;
+    
+    for (char c : text) {
+        if (isSymbol(c)) {
+            if (!currentWord.empty()) {
+                // Store the word before the symbol
+                std::string normalized = normalizeWord(currentWord);
+                if (!normalized.empty()) {
+                    WordNode* newNode = new WordNode();
+                    newNode->baseWord = normalized;
+                    newNode->variation = currentWord;
+                    newNode->frequency = 1;
+                    newNode->next = wordList;
+                    wordList = newNode;
+                }
+                currentWord.clear();
+            }
+            currentSymbols += c;
+        } else if (isspace(c)) {
+            if (!currentWord.empty()) {
+                // Store the word
+                std::string normalized = normalizeWord(currentWord);
+                if (!normalized.empty()) {
+                    WordNode* newNode = new WordNode();
+                    newNode->baseWord = normalized;
+                    newNode->variation = currentWord;
+                    newNode->frequency = 1;
+                    newNode->next = wordList;
+                    wordList = newNode;
+                }
+                currentWord.clear();
+            }
+            if (!currentSymbols.empty()) {
+                // Store the symbols
+                WordNode* newNode = new WordNode();
+                newNode->baseWord = currentSymbols;
+                newNode->variation = currentSymbols;
+                newNode->frequency = 1;
+                newNode->next = wordList;
+                wordList = newNode;
+                currentSymbols.clear();
+            }
+        } else {
+            if (!currentSymbols.empty()) {
+                // Store the symbols
+                WordNode* newNode = new WordNode();
+                newNode->baseWord = currentSymbols;
+                newNode->variation = currentSymbols;
+                newNode->frequency = 1;
+                newNode->next = wordList;
+                wordList = newNode;
+                currentSymbols.clear();
+            }
+            currentWord += c;
+        }
+    }
+    
+    // Handle any remaining word or symbols
+    if (!currentWord.empty()) {
+        std::string normalized = normalizeWord(currentWord);
+        if (!normalized.empty()) {
+            WordNode* newNode = new WordNode();
+            newNode->baseWord = normalized;
+            newNode->variation = currentWord;
+            newNode->frequency = 1;
+            newNode->next = wordList;
+            wordList = newNode;
+        }
+    }
+    if (!currentSymbols.empty()) {
+        WordNode* newNode = new WordNode();
+        newNode->baseWord = currentSymbols;
+        newNode->variation = currentSymbols;
+        newNode->frequency = 1;
+        newNode->next = wordList;
+        wordList = newNode;
+    }
+}
+
+// Function to merge similar words in the list
+void mergeSimilarWords(WordNode*& wordList) {
+    WordNode* current = wordList;
+    while (current != nullptr) {
+        WordNode* runner = current->next;
+        WordNode* prev = current;
+        
+        while (runner != nullptr) {
+            if (areWordsSimilar(current->baseWord, runner->baseWord)) {
+                // Merge the frequencies
+                current->frequency += runner->frequency;
+                
+                // Remove the similar word
+                prev->next = runner->next;
+                WordNode* toDelete = runner;
+                runner = runner->next;
+                delete toDelete;
+            } else {
+                prev = runner;
+                runner = runner->next;
+            }
+        }
+        current = current->next;
+    }
+}
+
+// Function to display word frequencies
+void displayWordFrequencies(WordNode* wordList, int limit = 10) {
+    // Sort the list by frequency
+    for (WordNode* i = wordList; i != nullptr; i = i->next) {
+        for (WordNode* j = i->next; j != nullptr; j = j->next) {
+            if (i->frequency < j->frequency) {
+                std::swap(i->baseWord, j->baseWord);
+                std::swap(i->variation, j->variation);
+                std::swap(i->frequency, j->frequency);
+            }
+        }
+    }
+    
+    // Display top words
+    int count = 0;
+    WordNode* current = wordList;
+    while (current != nullptr && count < limit) {
+        std::cout << (count + 1) << ". " << current->variation 
+                  << " (base: " << current->baseWord << "): " 
+                  << current->frequency << " occurrences" << std::endl;
+        current = current->next;
+        count++;
+    }
+}
+
 void findOneStarReviewWords(Review* head, WordFrequency*& wordFreq) {
+    WordNode* wordList = nullptr;
+    
     while (head) {
         if (head->rating == 1) {
-            splitIntoWords(head->reviewText, wordFreq);
+            processText(head->reviewText, wordList);
         }
         head = head->next;
+    }
+    
+    mergeSimilarWords(wordList);
+    
+    // Convert WordNode list to WordFrequency list
+    WordNode* current = wordList;
+    while (current != nullptr) {
+        WordFrequency* newWord = new WordFrequency();
+        newWord->word = current->variation;
+        newWord->frequency = current->frequency;
+        newWord->next = wordFreq;
+        wordFreq = newWord;
+        
+        WordNode* toDelete = current;
+        current = current->next;
+        delete toDelete;
     }
 }
 
