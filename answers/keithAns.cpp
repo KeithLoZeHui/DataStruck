@@ -4,8 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <cctype>
-// #include <vector>      // Removed: No built-in containers allowed
+#include <cctype>     
 #include <chrono>
 #include <stdexcept>
 #include <limits>
