@@ -25,10 +25,5 @@ struct WordFrequency {
     WordFrequency() : frequency(0), next(nullptr) {}
 };
 
-// Removed outdated Transaction struct definition (defined in keithAns.cpp as TransactionNode/TransactionData)
-
-// Removed unused Heap Sort related structures and classes
-
-// Removed outdated function declarations (definitions are in keithAns.cpp)
 
 #endif // KEITHHPP_HPP
