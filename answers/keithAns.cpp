@@ -8,6 +8,53 @@
 #include <chrono>
 #include <stdexcept>
 #include <limits>
+
+/*
+ * HEADER/ TABLE OF CONTENT:
+ * 
+ * Data Structures:
+ * - WordNode (line 15)           - Structure for word variations and frequencies
+ * - TransactionNode (line 24)    - Structure for transaction data in linked list
+ * - TransactionData (line 39)    - Structure for transaction data in array
+ * - TransactionArray (line 145)  - Custom dynamic array implementation
+ * 
+ * Word Processing Functions:
+ * - splitIntoWords (line 52)     - Splits text into words and updates frequency
+ * - isSymbol (line 575)          - Checks if character is a symbol
+ * - normalizeWord (line 584)     - Normalizes word by removing symbols and converting to lowercase
+ * - areWordsSimilar (line 601)   - Checks if two words are similar using distance metric
+ * - processText (line 621)       - Processes text to extract words and symbols
+ * - mergeSimilarWords (line 706) - Merges similar words in the list
+ * - displayWordFrequencies (line 736) - Displays word frequencies in descending order
+ * 
+ * Transaction Processing Functions:
+ * - merge (line 109)             - Merges two sorted transaction lists
+ * - split (line 130)             - Splits transaction list into two halves
+ * - mergeSortTransactionsLL (line 145) - Merge sort for linked list transactions
+ * - mergeArrays (line 233)       - Merges two sorted transaction arrays
+ * - mergeSortArrayRecursive (line 281) - Recursive merge sort for transaction arrays
+ * - sortTransactionsArrayByDate (line 292) - Wrapper for array merge sort
+ * 
+ * File I/O Functions:
+ * - readTransactionsFileLL (line 300) - Reads transactions into linked list
+ * - readTransactionsFileArray (line 399) - Reads transactions into custom array
+ * - readReviewsFile (line 482)    - Reads reviews from file
+ * 
+ * Counting and Analysis Functions:
+ * - countTransactionsLL (line 511) - Counts transactions in linked list
+ * - countTransactionsArray (line 520) - Counts transactions in array
+ * - countReviews (line 524)       - Counts reviews in list
+ * - calculateElectronicsCreditCardPercentageLL (line 534) - Calculates percentage for linked list
+ * - calculateElectronicsCreditCardPercentageArray (line 553) - Calculates percentage for array
+ * - findOneStarReviewWords (line 765) - Processes one-star reviews
+ * - sortWordsByFrequency (line 796) - Sorts words by frequency
+ * - displayTopWords (line 827)    - Displays top words by frequency
+ * - countWordFrequency (line 849) - Counts words in frequency list
+ * 
+ * Main Function:
+ * - main (line 868)              - Orchestrates the entire program
+ */
+
 //break down the sentence into words, put the words into linked list, and find any and all similar words instead of using this StopWord, need to break down the sentences into what expressions (need to detect symbols)
 
 // Structure to store word variations and their frequencies
