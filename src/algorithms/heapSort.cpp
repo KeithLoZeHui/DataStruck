@@ -1,10 +1,10 @@
-#include "../../include/KeithHPP.hpp"
+#include "../../include/heapSort.hpp"
+#include "../../include/linkedList.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
 #include <cmath>
-using namespace std;
 
 // HeapLinkedList implementation
 HeapLinkedList::HeapLinkedList() : root(nullptr), last(nullptr), size(0) {}
@@ -113,7 +113,7 @@ void HeapLinkedList::insert(double value) {
 }
 
 double HeapLinkedList::extractMax() {
-    if (!root) throw runtime_error("Heap is empty");
+    if (!root) throw std::runtime_error("Heap is empty");
 
     double maxVal = root->data;
     
@@ -179,20 +179,20 @@ HeapNode* HeapLinkedList::getRoot() const { return root; }
 int HeapLinkedList::getSize() const { return size; }
 bool HeapLinkedList::isEmpty() const { return size == 0; }
 
-// KeithHeapSort implementation
-void KeithHeapSort::sortTransactions(Transaction*& head) {
+// HeapSort implementation
+void HeapSort::sortTransactions(TransactionNode*& head) {
     if (!head || !head->next) return;  // Nothing to sort
 
     // Count transactions
     int count = 0;
-    Transaction* current = head;
+    TransactionNode* current = head;
     while (current) {
         count++;
         current = current->next;
     }
 
     // Create array of pointers to transactions
-    Transaction** arr = new Transaction*[count];
+    TransactionNode** arr = new TransactionNode*[count];
     current = head;
     for (int i = 0; i < count; i++) {
         arr[i] = current;
@@ -214,7 +214,7 @@ void KeithHeapSort::sortTransactions(Transaction*& head) {
 
             if (largest != i) {
                 // Swap transactions
-                Transaction* temp = arr[i];
+                TransactionNode* temp = arr[i];
                 arr[i] = arr[largest];
                 arr[largest] = temp;
                 i = largest;
@@ -225,7 +225,7 @@ void KeithHeapSort::sortTransactions(Transaction*& head) {
     }
 
     // Extract max elements and rebuild heap
-    Transaction* sorted = nullptr;
+    TransactionNode* sorted = nullptr;
     for (int i = count - 1; i >= 0; i--) {
         // Add max to sorted list
         arr[0]->next = sorted;
@@ -246,7 +246,7 @@ void KeithHeapSort::sortTransactions(Transaction*& head) {
                 largest = right;
 
             if (largest != parent) {
-                Transaction* temp = arr[parent];
+                TransactionNode* temp = arr[parent];
                 arr[parent] = arr[largest];
                 arr[largest] = temp;
                 parent = largest;
@@ -261,23 +261,24 @@ void KeithHeapSort::sortTransactions(Transaction*& head) {
     delete[] arr;
 }
 
-void KeithHeapSort::processTransactions(const string& filename) {
-    Transaction* transactions = nullptr;
-    readTransactionsFile(filename, transactions);
+void HeapSort::processTransactions(const std::string& filename) {
+    TransactionNode* transactions = nullptr;
+    // Note: You'll need to implement readTransactionsFile or use an existing one
+    // readTransactionsFile(filename, transactions);
     sortTransactions(transactions);
     
     // Display sorted transactions
-    cout << "\nSorted Transactions (using Heap Sort):" << endl;
-    Transaction* current = transactions;
+    std::cout << "\nSorted Transactions (using Heap Sort):" << std::endl;
+    TransactionNode* current = transactions;
     while (current) {
-        cout << "Product: " << current->product 
-             << ", Price: $" << fixed << setprecision(2) << current->price << endl;
+        std::cout << "Product: " << current->product 
+             << ", Price: $" << std::fixed << std::setprecision(2) << current->price << std::endl;
         current = current->next;
     }
 
     // Clean up
     while (transactions) {
-        Transaction* temp = transactions;
+        TransactionNode* temp = transactions;
         transactions = transactions->next;
         delete temp;
     }

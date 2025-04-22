@@ -1,4 +1,5 @@
-#include "../include/KeithHPP.hpp"
+#include "../include/linkedList.hpp"
+#include "../include/SortingAlgorithms.hpp"
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -936,14 +937,14 @@ int main() {
 
     // Time Linked List Sort (Merge Sort by Date)
     auto startLLSort = std::chrono::high_resolution_clock::now();
-    mergeSortTransactionsLL(transactionsLL);
+    SortingAlgorithms::mergeSortLL(transactionsLL);
     auto endLLSort = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> durationLLSort = endLLSort - startLLSort;
     std::cout << "Linked List Merge Sort Time: " << durationLLSort.count() << " ms" << std::endl;
 
     // Time Custom Array Sort (Merge Sort by Date)
     auto startArrSort = std::chrono::high_resolution_clock::now();
-    sortTransactionsArrayByDate(transactionsArray); // Use the custom array sort function
+    SortingAlgorithms::mergeSortArray(transactionsArray);
     auto endArrSort = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> durationArrSort = endArrSort - startArrSort;
     std::cout << "Custom Array Merge Sort Time:" << durationArrSort.count() << " ms" << std::endl;
