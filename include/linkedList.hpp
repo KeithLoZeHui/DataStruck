@@ -1,5 +1,5 @@
-#ifndef KEITHHPP_HPP
-#define KEITHHPP_HPP
+#ifndef LINKEDLIST_HPP
+#define LINKEDLIST_HPP
 
 #include <string>
 #include <fstream>
@@ -17,9 +17,6 @@ struct Review {
     Review() : next(nullptr) {}
 };
 
-
-//chnges
-
 struct WordFrequency {
     std::string word;
     int frequency;
@@ -28,5 +25,4 @@ struct WordFrequency {
     WordFrequency() : frequency(0), next(nullptr) {}
 };
 
-
-#endif // KEITHHPP_HPP
+#endif // LINKEDLIST_HPP 
