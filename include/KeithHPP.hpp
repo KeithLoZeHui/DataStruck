@@ -17,6 +17,9 @@ struct Review {
     Review() : next(nullptr) {}
 };
 
+
+//chnges
+
 struct WordFrequency {
     std::string word;
     int frequency;
