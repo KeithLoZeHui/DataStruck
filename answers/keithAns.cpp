@@ -984,20 +984,3 @@ int main() {
     return 0;
 }
 
-// Remove or comment out KeithHeapSort class usage if it's not defined here
-// Assuming KeithHeapSort was defined in KeithHPP.hpp and is no longer needed for date sort.
-/*
-class KeithHeapSort {
-    // ... implementation ...
-public:
-    void sortTransactions(TransactionNode*& head) {
-        // ... implementation (likely sorts by price based on previous main) ...
-        std::cout << "Warning: KeithHeapSort::sortTransactions called, but requirement is date sort." << std::endl;
-    }
-};
-*/
-
-// Note: Ensure Review struct and related functions (findOneStarReviewWords, etc.)
-// are correctly defined and function as intended. The WordNode/WordFrequency parts
-// were kept as linked lists for the review analysis task as specified.
-// The comparison was focused on the Transaction data structure requirement.
