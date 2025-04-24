@@ -9,6 +9,7 @@
 #include <chrono>
 #include <stdexcept>
 #include <limits>
+#include <fstream>
 
 /* testing
  * HEADER/ TABLE OF CONTENT:
@@ -60,56 +61,37 @@
 
 // Structure to store word variations and their frequencies
 struct WordNode {
-    std::string baseWord;
-    std::string variation;
+    MyString baseWord;
+    MyString variation;
     int frequency;
     WordNode* next;
     
     WordNode() : frequency(0), next(nullptr) {}
 };
 
-// Renamed Transaction to TransactionNode for clarity in linked list context
-struct TransactionNode {
-    std::string customerID;
-    std::string product;
-    std::string category;
-    double price;
-    std::string date; // Keep as string for sorting, could parse to date object if needed
-    std::string paymentMethod;
-    TransactionNode* next; // Pointer for linked list
+// Using TransactionNode from linkedList.hpp
 
-    // Default constructor
-    TransactionNode() : price(0.0), next(nullptr) {}
-};
-
-// New structure for array/vector implementation (no next pointer)
-struct TransactionData {
-    std::string customerID;
-    std::string product;
-    std::string category;
-    double price;
-    std::string date;
-    std::string paymentMethod;
-
-    // Default constructor
-    TransactionData() : price(0.0) {}
-};
+// Using TransactionData from linkedList.hpp
 
 // Helper function to split string into words
-void splitIntoWords(const std::string& text, WordFrequency*& wordFreq) {
-    std::string word;
-    std::istringstream iss(text);
+void splitIntoWords(const char* text, WordFrequency*& wordFreq) {
+    std::string stdText(text);
+    std::string stdWord;
+    std::istringstream iss(stdText);
     
-    while (iss >> word) {
+    while (iss >> stdWord) {
         // Convert to lowercase and remove punctuation
-        std::string cleanWord;
-        for (char c : word) {
+        std::string cleanStdWord;
+        for (char c : stdWord) {
             if (isalpha(c)) {
-                cleanWord += tolower(c);
+                cleanStdWord += tolower(c);
             }
         }
         
-        if (cleanWord.empty()) continue;
+        if (cleanStdWord.empty()) continue;
+        
+        // Convert to MyString for comparison
+        MyString cleanWord(cleanStdWord.c_str());
         
         // Update word frequency
         WordFrequency* current = wordFreq;
@@ -188,91 +170,7 @@ void mergeSortTransactionsLL(TransactionNode*& head) {
     head = merge(left, right);
 }
 
-// --- Custom Dynamic Array Implementation for TransactionData ---
-class TransactionArray {
-private:
-    TransactionData* data; // Pointer to the dynamically allocated array
-    size_t arraySize;      // Current number of elements
-    size_t arrayCapacity;  // Allocated memory capacity
-
-    // Private helper to resize the array when capacity is reached
-    void resize(size_t newCapacity) {
-        if (newCapacity <= arrayCapacity) return; // Only grow
-
-        TransactionData* newData = new TransactionData[newCapacity];
-        // Copy existing elements
-        for (size_t i = 0; i < arraySize; ++i) {
-            newData[i] = data[i]; // Assumes TransactionData has a proper copy assignment or is POD-like
-        }
-
-        delete[] data;       // Free old memory
-        data = newData;      // Point to new memory
-        arrayCapacity = newCapacity;
-    }
-
-public:
-    // Constructor
-    TransactionArray() : data(nullptr), arraySize(0), arrayCapacity(0) {
-        resize(10); // Initial capacity
-    }
-
-    // Destructor
-    ~TransactionArray() {
-        delete[] data;
-    }
-
-    // Add element to the end
-    void push_back(const TransactionData& transaction) {
-        if (arraySize == arrayCapacity) {
-            resize(arrayCapacity == 0 ? 10 : arrayCapacity * 2); // Double capacity
-        }
-        data[arraySize++] = transaction;
-    }
-
-    // Access element by index (const version)
-    const TransactionData& at(size_t index) const {
-        if (index >= arraySize) {
-            throw std::out_of_range("Index out of bounds");
-        }
-        return data[index];
-    }
-
-    // Access element by index (non-const version)
-    TransactionData& at(size_t index) {
-        if (index >= arraySize) {
-            throw std::out_of_range("Index out of bounds");
-        }
-        return data[index];
-    }
-
-    // Access element by index using operator[] (const version)
-     const TransactionData& operator[](size_t index) const {
-         // Note: No bounds checking for performance, similar to std::vector[]
-         return data[index];
-     }
-
-     // Access element by index using operator[] (non-const version)
-     TransactionData& operator[](size_t index) {
-         // Note: No bounds checking for performance
-         return data[index];
-     }
-
-
-    // Get current size
-    size_t size() const {
-        return arraySize;
-    }
-
-    // Check if empty
-    bool empty() const {
-        return arraySize == 0;
-    }
-
-     // Direct access to the underlying data (use with caution)
-     TransactionData* getDataPtr() { return data; }
-     const TransactionData* getDataPtr() const { return data; }
-
-};
+// Using TransactionArray from linkedList.hpp
 
 // --- Merge Sort Implementation for Custom TransactionArray ---
 
@@ -381,21 +279,25 @@ void readTransactionsFileLL(const std::string& filename, TransactionNode*& head)
                      // If CUST is not found, assume standard format
                      productPart = customerPart; // The first part was the product
                      if (!std::getline(ss, customerPart, ',')) { throw std::runtime_error("Missing CustomerID after pipe format assumed wrong");}
-                     newTransaction->product = productPart;
-                     newTransaction->customerID = customerPart;
+                     newTransaction->product = MyString(productPart.c_str());
+                     newTransaction->customerID = MyString(customerPart.c_str());
                 } else {
-                    newTransaction->customerID = customerPart;
-                    newTransaction->product = productPart;
+                    newTransaction->customerID = MyString(customerPart.c_str());
+                    newTransaction->product = MyString(productPart.c_str());
                 }
 
             } else {
                 // Assume standard format: CustomerID, Product
-                 newTransaction->customerID = token; // First token is CustomerID
-                 if (!std::getline(ss, newTransaction->product, ',')) { throw std::runtime_error("Missing Product field"); }
+                 newTransaction->customerID = MyString(token.c_str()); // First token is CustomerID
+                 std::string tempProduct;
+                 if (!std::getline(ss, tempProduct, ',')) { throw std::runtime_error("Missing Product field"); }
+                 newTransaction->product = MyString(tempProduct.c_str());
             }
 
 
-            if (!std::getline(ss, newTransaction->category, ',')) { throw std::runtime_error("Missing Category field"); }
+            std::string tempCategory;
+            if (!std::getline(ss, tempCategory, ',')) { throw std::runtime_error("Missing Category field"); }
+            newTransaction->category = MyString(tempCategory.c_str());
             if (!std::getline(ss, token, ',')) { throw std::runtime_error("Missing Price field"); }
             // Robust price conversion
             try {
@@ -406,14 +308,18 @@ void readTransactionsFileLL(const std::string& filename, TransactionNode*& head)
                 throw std::runtime_error("Price value out of range");
             }
 
-            if (!std::getline(ss, newTransaction->date, ',')) { throw std::runtime_error("Missing Date field"); }
+            std::string tempDate;
+            if (!std::getline(ss, tempDate, ',')) { throw std::runtime_error("Missing Date field"); }
+            newTransaction->date = MyString(tempDate.c_str());
             // Basic date format validation (e.g., check length or pattern if needed)
-            if (newTransaction->date.length() != 10 || newTransaction->date[4] != '-' || newTransaction->date[7] != '-') {
+            std::string dateStr(tempDate);
+            if (dateStr.length() != 10 || dateStr[4] != '-' || dateStr[7] != '-') {
                  // Handle potentially incorrect date format - log or skip?
                  // For now, we accept it but could add stricter validation.
             }
 
-            if (!std::getline(ss, newTransaction->paymentMethod)) { // Read the rest of the line
+            std::string tempPaymentMethod;
+            if (!std::getline(ss, tempPaymentMethod)) { // Read the rest of the line
                  if (ss.eof()) { // Check if it was just the end of the line
                     // Payment method might be optional or the last field, handle appropriately
                     // newTransaction->paymentMethod = "Unknown"; // Or leave empty
@@ -422,8 +328,10 @@ void readTransactionsFileLL(const std::string& filename, TransactionNode*& head)
                  }
             }
              // Trim leading/trailing whitespace from payment method if necessary
-             newTransaction->paymentMethod.erase(0, newTransaction->paymentMethod.find_first_not_of(" \t\n\r\f\v"));
-             newTransaction->paymentMethod.erase(newTransaction->paymentMethod.find_last_not_of(" \t\n\r\f\v") + 1);
+             std::string paymentMethodStr(newTransaction->paymentMethod.c_str());
+             paymentMethodStr.erase(0, paymentMethodStr.find_first_not_of(" \t\n\r\f\v"));
+             paymentMethodStr.erase(paymentMethodStr.find_last_not_of(" \t\n\r\f\v") + 1);
+             newTransaction->paymentMethod = MyString(paymentMethodStr.c_str());
 
 
             // Add to linked list (prepend)
@@ -478,18 +386,22 @@ void readTransactionsFileArray(const std::string& filename, TransactionArray& tr
                  if (custPos == std::string::npos) {
                      productPart = customerPart;
                      if (!std::getline(ss, customerPart, ',')) { throw std::runtime_error("Missing CustomerID after pipe format assumed wrong");}
-                     newTransaction.product = productPart;
-                     newTransaction.customerID = customerPart;
+                     newTransaction.product = MyString(productPart.c_str());
+                     newTransaction.customerID = MyString(customerPart.c_str());
                  } else {
-                    newTransaction.customerID = customerPart;
-                    newTransaction.product = productPart;
+                    newTransaction.customerID = MyString(customerPart.c_str());
+                    newTransaction.product = MyString(productPart.c_str());
                  }
             } else {
-                 newTransaction.customerID = token;
-                 if (!std::getline(ss, newTransaction.product, ',')) { throw std::runtime_error("Missing Product field"); }
+                 newTransaction.customerID = MyString(token.c_str());
+                 std::string tempProduct;
+                 if (!std::getline(ss, tempProduct, ',')) { throw std::runtime_error("Missing Product field"); }
+                 newTransaction.product = MyString(tempProduct.c_str());
             }
 
-            if (!std::getline(ss, newTransaction.category, ',')) { throw std::runtime_error("Missing Category field"); }
+            std::string tempCategory;
+            if (!std::getline(ss, tempCategory, ',')) { throw std::runtime_error("Missing Category field"); }
+            newTransaction.category = MyString(tempCategory.c_str());
             if (!std::getline(ss, token, ',')) { throw std::runtime_error("Missing Price field"); }
              try {
                 newTransaction.price = std::stod(token);
@@ -499,19 +411,25 @@ void readTransactionsFileArray(const std::string& filename, TransactionArray& tr
                 throw std::runtime_error("Price value out of range");
             }
 
-            if (!std::getline(ss, newTransaction.date, ',')) { throw std::runtime_error("Missing Date field"); }
+            std::string tempDate;
+            if (!std::getline(ss, tempDate, ',')) { throw std::runtime_error("Missing Date field"); }
+            newTransaction.date = MyString(tempDate.c_str());
              // Optional: Add date format validation here too
 
-            if (!std::getline(ss, newTransaction.paymentMethod)) {
+            std::string tempPaymentMethod;
+            if (!std::getline(ss, tempPaymentMethod)) {
                   if (ss.eof()) {
                     // Handle missing optional payment method
                   } else {
+                     newTransaction.paymentMethod = MyString(tempPaymentMethod.c_str());
                      throw std::runtime_error("Missing Payment Method field or extra data");
                   }
             }
              // Trim whitespace
-             newTransaction.paymentMethod.erase(0, newTransaction.paymentMethod.find_first_not_of(" \t\n\r\f\v"));
-             newTransaction.paymentMethod.erase(newTransaction.paymentMethod.find_last_not_of(" \t\n\r\f\v") + 1);
+             std::string paymentMethodStr(newTransaction.paymentMethod.c_str());
+             paymentMethodStr.erase(0, paymentMethodStr.find_first_not_of(" \t\n\r\f\v"));
+             paymentMethodStr.erase(paymentMethodStr.find_last_not_of(" \t\n\r\f\v") + 1);
+             newTransaction.paymentMethod = MyString(paymentMethodStr.c_str());
 
             // Add to custom array
             transactions.push_back(newTransaction); // Use push_back of TransactionArray
@@ -543,11 +461,17 @@ void readReviewsFile(const std::string& filename, Review*& head) {
         std::istringstream ss(line);
         std::string token;
         
-        std::getline(ss, newReview->productID, ',');
-        std::getline(ss, newReview->customerID, ',');
+        std::string tempProductID;
+        std::getline(ss, tempProductID, ',');
+        newReview->productID = MyString(tempProductID.c_str());
+        std::string tempCustomerID;
+        std::getline(ss, tempCustomerID, ',');
+        newReview->customerID = MyString(tempCustomerID.c_str());
         std::getline(ss, token, ',');
         newReview->rating = std::stoi(token);
-        std::getline(ss, newReview->reviewText);
+        std::string tempReviewText;
+        std::getline(ss, tempReviewText);
+        newReview->reviewText = MyString(tempReviewText.c_str());
         
         newReview->next = head;
         head = newReview;
@@ -584,9 +508,11 @@ double calculateElectronicsCreditCardPercentageLL(TransactionNode* head) {
 
     TransactionNode* current = head; // Iterate using a temporary pointer
     while (current) {
-        if (current->category == "Electronics") {
+        MyString electronics("Electronics");
+        if (current->category == electronics) {
             totalElectronics++;
-            if (current->paymentMethod == "Credit Card") {
+            MyString creditCard("Credit Card");
+            if (current->paymentMethod == creditCard) {
                 electronicsCreditCard++;
             }
         }
@@ -603,9 +529,11 @@ double calculateElectronicsCreditCardPercentageArray(const TransactionArray& tra
 
     for (size_t i = 0; i < transactions.size(); ++i) { // Iterate using index
         const TransactionData& transaction = transactions[i]; // Access using operator[] or at()
-        if (transaction.category == "Electronics") {
+        MyString electronics("Electronics");
+        if (transaction.category == electronics) {
             totalElectronics++;
-            if (transaction.paymentMethod == "Credit Card") {
+            MyString creditCard("Credit Card");
+            if (transaction.paymentMethod == creditCard) {
                 electronicsCreditCard++;
             }
         }
@@ -628,14 +556,15 @@ bool isSymbol(char c) {
  * @param word The word to normalize
  * @return The normalized version of the word
  */
-std::string normalizeWord(const std::string& word) {
+MyString normalizeWord(const MyString& word) {
+    std::string stdWord(word.c_str());
     std::string normalized;
-    for (char c : word) {
+    for (char c : stdWord) {
         if (!isSymbol(c)) {
             normalized += tolower(c);
         }
     }
-    return normalized;
+    return MyString(normalized.c_str());
 }
 
 /**
@@ -645,14 +574,17 @@ std::string normalizeWord(const std::string& word) {
  * @param maxDistance Maximum allowed difference between words
  * @return true if words are similar, false otherwise
  */
-bool areWordsSimilar(const std::string& word1, const std::string& word2, int maxDistance = 2) {
-    if (abs((int)word1.length() - (int)word2.length()) > maxDistance) {
+bool areWordsSimilar(const MyString& word1, const MyString& word2, int maxDistance = 2) {
+    std::string stdWord1(word1.c_str());
+    std::string stdWord2(word2.c_str());
+    
+    if (abs((int)stdWord1.length() - (int)stdWord2.length()) > maxDistance) {
         return false;
     }
     
     int distance = 0;
-    for (size_t i = 0; i < std::min(word1.length(), word2.length()); ++i) {
-        if (word1[i] != word2[i]) {
+    for (size_t i = 0; i < std::min(stdWord1.length(), stdWord2.length()); ++i) {
+        if (stdWord1[i] != stdWord2[i]) {
             distance++;
             if (distance > maxDistance) return false;
         }
@@ -665,19 +597,20 @@ bool areWordsSimilar(const std::string& word1, const std::string& word2, int max
  * @param text The text to process
  * @param wordList Reference to the head of the word list
  */
-void processText(const std::string& text, WordNode*& wordList) {
+void processText(const MyString& text, WordNode*& wordList) {
+    std::string stdText(text.c_str());
     std::string currentWord;
     std::string currentSymbols;
     
-    for (char c : text) {
+    for (char c : stdText) {
         if (isSymbol(c)) {
             if (!currentWord.empty()) {
                 // Store the word before the symbol
-                std::string normalized = normalizeWord(currentWord);
-                if (!normalized.empty()) {
+                MyString normalized = normalizeWord(MyString(currentWord.c_str()));
+                if (!std::string(normalized.c_str()).empty()) {
                     WordNode* newNode = new WordNode();
                     newNode->baseWord = normalized;
-                    newNode->variation = currentWord;
+                    newNode->variation = MyString(currentWord.c_str());
                     newNode->frequency = 1;
                     newNode->next = wordList;
                     wordList = newNode;
@@ -688,11 +621,11 @@ void processText(const std::string& text, WordNode*& wordList) {
         } else if (isspace(c)) {
             if (!currentWord.empty()) {
                 // Store the word
-                std::string normalized = normalizeWord(currentWord);
-                if (!normalized.empty()) {
+                MyString normalized = normalizeWord(MyString(currentWord.c_str()));
+                if (!std::string(normalized.c_str()).empty()) {
                     WordNode* newNode = new WordNode();
                     newNode->baseWord = normalized;
-                    newNode->variation = currentWord;
+                    newNode->variation = MyString(currentWord.c_str());
                     newNode->frequency = 1;
                     newNode->next = wordList;
                     wordList = newNode;
@@ -702,8 +635,8 @@ void processText(const std::string& text, WordNode*& wordList) {
             if (!currentSymbols.empty()) {
                 // Store the symbols
                 WordNode* newNode = new WordNode();
-                newNode->baseWord = currentSymbols;
-                newNode->variation = currentSymbols;
+                newNode->baseWord = MyString(currentSymbols.c_str());
+                newNode->variation = MyString(currentSymbols.c_str());
                 newNode->frequency = 1;
                 newNode->next = wordList;
                 wordList = newNode;
@@ -713,8 +646,8 @@ void processText(const std::string& text, WordNode*& wordList) {
             if (!currentSymbols.empty()) {
                 // Store the symbols
                 WordNode* newNode = new WordNode();
-                newNode->baseWord = currentSymbols;
-                newNode->variation = currentSymbols;
+                newNode->baseWord = MyString(currentSymbols.c_str());
+                newNode->variation = MyString(currentSymbols.c_str());
                 newNode->frequency = 1;
                 newNode->next = wordList;
                 wordList = newNode;
@@ -726,11 +659,11 @@ void processText(const std::string& text, WordNode*& wordList) {
     
     // Handle any remaining word or symbols
     if (!currentWord.empty()) {
-        std::string normalized = normalizeWord(currentWord);
-        if (!normalized.empty()) {
+        MyString normalized = normalizeWord(MyString(currentWord.c_str()));
+        if (!std::string(normalized.c_str()).empty()) {
             WordNode* newNode = new WordNode();
             newNode->baseWord = normalized;
-            newNode->variation = currentWord;
+            newNode->variation = MyString(currentWord.c_str());
             newNode->frequency = 1;
             newNode->next = wordList;
             wordList = newNode;
@@ -738,8 +671,8 @@ void processText(const std::string& text, WordNode*& wordList) {
     }
     if (!currentSymbols.empty()) {
         WordNode* newNode = new WordNode();
-        newNode->baseWord = currentSymbols;
-        newNode->variation = currentSymbols;
+        newNode->baseWord = MyString(currentSymbols.c_str());
+        newNode->variation = MyString(currentSymbols.c_str());
         newNode->frequency = 1;
         newNode->next = wordList;
         wordList = newNode;
