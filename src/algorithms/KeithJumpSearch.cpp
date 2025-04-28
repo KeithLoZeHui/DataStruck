@@ -173,8 +173,6 @@ public:
     }
 };
 
-int main() {
-    KeithJumpSearch searcher;
-    searcher.processTransactions("transactionsClean.csv");
-    return 0;
-}
+// int main() removed for library use {
+    // Main function body removed for library use
+
